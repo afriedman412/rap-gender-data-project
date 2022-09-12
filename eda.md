@@ -940,6 +940,7 @@ df_unique_token_pct_floor = pd.concat([
 # Post-optimization
 ### 9. Review<a name="9"></a>
 <a href="#index">Top</a>
+
 Here is what we learned from our exploratory data analysis:
 - Target class is imbalanced (~85% male to ~15% female)
 - Significant overrepresentation of some artists
