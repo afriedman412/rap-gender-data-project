@@ -8,8 +8,10 @@ import time
 from datetime import datetime as dt
 import os
 import spacy
+import typing
 from CONFIG import genius_token
 
+# pre-loads the spacy model 
 model = spacy.load("./verse_header_model/")
 
 class SongDataPuller:
@@ -39,7 +41,7 @@ class SongDataPuller:
 
         self.exclude = [e.lower() for e in self.exclude]
 
-    def intake_query(self, query_entry):
+    def intake_query(self, query_entry: dict):
         """
         Formats the query_entry to allow for flexible searching.
 
@@ -53,7 +55,7 @@ class SongDataPuller:
         self.artist_excludes = query_entry.get("excludes", [])
         self.artist_excludes = [a.lower() for a in self.artist_excludes]
 
-    def pull_all_song_data(self, query_entry, dir_=None):
+    def pull_all_song_data(self, query_entry: dict, dir_: str = None):
         """
         Highest order function for querying.
         """
@@ -108,7 +110,7 @@ class SongDataPuller:
         token = 'Bearer {}'.format(genius_token)
         self.headers = {'Authorization': token}
 
-    def query_search(self, query):
+    def query_search(self, query: str) -> list:
         """
         Queries the search endpoint of the API.
         """
@@ -117,7 +119,7 @@ class SongDataPuller:
         time.sleep(2)
         return r.json()['response']['hits']
 
-    def songs_query(self, api_path, page=1):
+    def songs_query(self, api_path: str, page: int = 1) -> dict:
         """
         Queries the songs endpoint of the API, with pagination.
         """
@@ -126,7 +128,7 @@ class SongDataPuller:
         time.sleep(2)
         return r.json()['response']
 
-    def extract_song_data(self, song_json):
+    def extract_song_data(self, song_json: dict) -> dict:
         """
         Formats the query response for a song into song_data.
         """
@@ -143,7 +145,7 @@ class SongDataPuller:
         song_data['data_title'] = "-".join([song_data[k] for k in ['query', 'artist', 'title']])
         return song_data
 
-    def load_song(self, song_json):
+    def load_song(self, song_json: dict):
         """
         Extracts, filters, logs and saves song_data from a song query response.
         """
@@ -160,7 +162,7 @@ class SongDataPuller:
         song_data.pop('api_path')
         self.data_bucket.append(song_data)
 
-    def filter_artists(self, query_response):
+    def filter_artists(self, query_response: list) -> set:
         """
         Filters search API results and returns unique, relevant artists.
         """
@@ -174,7 +176,7 @@ class SongDataPuller:
                         ))
         return set(artists)
 
-    def extract_date(self, song_json):
+    def extract_date(self, song_json: dict) -> str:
         """
         Extracts date from date_json, based on which date variables are present.
         """
@@ -191,7 +193,7 @@ class SongDataPuller:
         else:
             return "NO DATE"
 
-    def exclusion_filter(self, song_data):
+    def exclusion_filter(self, song_data: dict) -> bool:
         """
         Filters out songs with excluded strings (from instantiation) in song_data.
 
@@ -223,7 +225,7 @@ class LyricsPuller:
     """
     Scrapes lyrics from Genius website for a given artist, saving the lyrics for each song to a text file.
     """
-    def __init__(self, artist, base_path="./lyrics"):
+    def __init__(self, artist: str, base_path: str = "./lyrics"):
         """
         Sets artist and path for saving lyrics, and initiates a requests session to persist throughout the scrape.
         """
@@ -231,7 +233,10 @@ class LyricsPuller:
         self.initiate_session()
         self.base_path = base_path
 
-    def process_entry(self, row):
+    def process_entry(self, row: dict):
+        """
+        Highest order function to intake lyrics from one song, using data from one row of CSV.
+        """
         print(row[0], row[1]['artist'], row[1]['title'], row[1]['url'])
         r = self.s.get(row[1]['url'])
         if r.status_code == 200:
@@ -262,6 +267,9 @@ class LyricsPuller:
         self.s.headers = headers
 
     def load_df(self):
+        """
+        Loads the artists data csv using canonical path structure.
+        """
         df = pd.read_csv(f'{self.base_path}/{self.artist}/{self.artist}_data.csv', header=None)
         if len(df.columns) == 8:
             df = df.loc[:,1:]
@@ -274,7 +282,7 @@ class LyricsPuller:
             self.process_entry(row)
 
 class SongFileProcessor:
-    def __init__(self, artist, model=model, base_path="./lyrics"):
+    def __init__(self, artist: str, model=model, base_path: str = "./lyrics"):
         self.artist = artist
         self.base_path = base_path
         self.model = model
@@ -290,12 +298,15 @@ class SongFileProcessor:
         verses_df = pd.concat(self.verse_dfs)
         verses_df.to_csv(os.path.join(self.base_path, self.artist, f"{self.artist}_verses.csv"), index=False)
 
-    def process_one_file(self, file_):
+    def process_one_file(self, file_: str):
         self.process_song(file_)
         df = self.make_output_df()
         self.verse_dfs.append(df)
     
-    def preprocess_text(self, text_):
+    def preprocess_text(self, text_: str) -> str:
+        """
+        Basic text processing. 
+        """
         text_ = text_.replace("\n\n(?)", "\n(?)")
         text_ = text_.replace("[?]", "(?)")
         text_ = text_.replace("\[", "[")
@@ -309,26 +320,31 @@ class SongFileProcessor:
         text_ = re.sub(r"\n([,&\)\]])", r"\1", text_)
         return text_
     
-    def extract_header(self, verse):
+    def extract_header(self, verse: str) -> str | None:
         header_rx = re.search(r"\[.{3,}\]", verse)
         if header_rx:
             return re.sub(r"[\[\]]", "", verse[header_rx.start():header_rx.end()])
         else:
             return
         
-    def extract_ents(self, doc, classes=None):
+    def extract_ents(self, doc, classes: list = None):
+        """
+        Extracts entities from a spacy doc.
+
+        "classes" ignores any classes except those provided.
+        """
         if classes:
             return [(d.text, d.label_, d.start, d.end) for d in doc.ents if d.label_ in classes]
         else:
             return [(d.text, d.label_, d.start, d.end) for d in doc.ents]
         
-    def process_song_info(self, song_info):
+    def process_song_info(self, song_info: str) -> dict:
         return dict(zip(
             ['song_title', 'release_date', 'song_artist', 'features', 'song_id'],
             [h.split(": ")[1] for h in song_info.split("\n") if h]
         ))
 
-    def process_header(self, verse_header):
+    def process_header(self, verse_header: str) -> Tuple[str, str]:
         ents = self.extract_ents(self.model(verse_header))
         verse_type = " ".join([e[0].replace(":", "") for e in ents if e[1]=="VERSE_TYPE"])
         verse_artist = next((e[0] for e in ents if e[1]=="ARTIST"), "")
@@ -336,7 +352,7 @@ class SongFileProcessor:
             verse_artist = None
         return verse_type, verse_artist
     
-    def process_song(self, file_):
+    def process_song(self, file_: str):
         self.verse_dicts = []
         self.text_ = open(os.path.join(self.base_path, self.artist, file_)).read()
         text_ = self.preprocess_text(self.text_)
@@ -351,17 +367,17 @@ class SongFileProcessor:
             dicto['verse_header'] = self.extract_header(v)
             self.verse_dicts.append(dicto)
             
-    def verse_dicts_to_df(self):
+    def verse_dicts_to_df(self) -> pd.DataFrame:
         return pd.DataFrame(self.verse_dicts)
         
-    def make_header_df(self, verses_df):
+    def make_header_df(self, verses_df: pd.DataFrame) -> pd.DataFrame:
         header_df = pd.DataFrame(
             verses_df['verse_header'].fillna("NO HEADER").map(self.process_header).to_list(),
             columns=['verse_type', 'verse_artist']
         )
         return header_df
     
-    def make_output_df(self):
+    def make_output_df(self) -> pd.DataFrame:
         verses_df = self.verse_dicts_to_df()
         if len(verses_df) > 0:
             header_df = self.make_header_df(verses_df)
