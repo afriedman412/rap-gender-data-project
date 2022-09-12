@@ -5,6 +5,10 @@ import regex as re
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+df = pd.read_csv("eda.csv") # importing partially saved data for demo processin
+sns.set_style("darkgrid") # seaborn prep
+sns.set_palette("muted")
 ```
 
 # Exploratory Data Analysis
@@ -22,16 +26,11 @@ This notebook will explore the data scraped in the "Data Acquisition" notebook, 
 7. <a href="#7">Downsampling overrepresented artists</a>
 8. <a href="#8">Removing verses with low unique token percentages</a>
 
-### Post-optimization EDA
-9. <a href="#9">Imbalanced classes revisited</a>
-10. <a href="#10">Overrepresentation revisited</a>
-
-
-```python
-df = pd.read_csv("eda.csv")
-sns.set_style("darkgrid")
-sns.set_palette("muted")
-```
+### Post-optimization
+9. <a href="#9">Review</a>
+10. <a href="#10">Imbalanced classes revisited</a>
+11. <a href="#11">Overrepresentation revisited</a>
+12. <a href="#12">Conclusion and future considerations</a>
 
 ### 1. Imbalanced classes <a name="1"></a>
 <a href="#index">Top</a>
@@ -60,7 +59,7 @@ plt.tight_layout();
 
 
     
-![png](img/output_4_0.png)
+![png](output_3_0.png)
     
 
 
@@ -103,7 +102,7 @@ plt.tight_layout()
 
 
     
-![png](./img/output_6_0.png)
+![png](output_5_0.png)
     
 
 
@@ -112,7 +111,7 @@ plt.tight_layout()
 
 Given both the class imbalance and the probable overrepresentation of some artists, it is unlikely that we will just train a model on the entire data set. At the very least, we can make some decisions about what would best inform our model before training.
 
-For example, **unique_token_pct** is the number of unique words in a verses divided by the total number of words in that verse. "Token" here is used loosely, as this is just unique strings (via `set(list(verse.split())`). If need be, I can remove stop words or lemmatize the inputs, but this is adequate for a first pass.
+For example, **unique_token_pct** is the number of unique words in a verses divided by the total number of words in that verse. "Token" here is used loosely, as this is just unique strings (via `set(list(verse.split())`). If need be, I could remove stop words or lemmatize the inputs, but this is adequate for a first pass.
 
 The distribution of unique token percentage is reasonably consistent between genders.
 
@@ -140,7 +139,7 @@ plt.tight_layout()
 
 
     
-![png](./img/output_8_0.png)
+![png](output_7_0.png)
     
 
 
@@ -158,7 +157,7 @@ fig, ax = plt.subplots(1,2, figsize=(12,5))
 df_ = df[df['verse_type'].isin(list(df['verse_type'].value_counts().head(5).index))
         ].groupby('gender')['verse_type']
 
-for ax_, n, c in zip(ax, [True, False], ['count', '%']):
+for ax_, n, c in zip(ax, [True, False], ['%', 'count']):
     sns.barplot(
         data = df_.value_counts(
             normalize=n
@@ -175,11 +174,11 @@ plt.tight_layout;
 
 
     
-![png](./img/output_10_0.png)
+![png](output_9_0.png)
     
 
 
-The data is overwhelmingly biased towards the 2010s.
+The data is also overwhelmingly biased towards the 2010s ...
 
 
 ```python
@@ -247,8 +246,37 @@ plt.tight_layout()
 
 
     
-![png](./img/output_13_0.png)
+![png](output_12_0.png)
     
+
+
+... although 18% of the verses have either no date or one which is misformatted (most of which are missing dates).
+
+
+```python
+len(df.query("year == 'NO DATE' or year == 'BAD FORMAT'"))/len(df)
+```
+
+
+
+
+    0.18710038491890935
+
+
+
+
+```python
+df['year'].map(lambda y: 0 if y not in ['NO DATE', 'BAD FORMAT'] else y).value_counts()
+```
+
+
+
+
+    0             201895
+    NO DATE        46453
+    BAD FORMAT        16
+    Name: year, dtype: int64
+
 
 
 # Optimization
@@ -270,10 +298,7 @@ Let's see if there are any recurring text patterns that we might want to remove 
 ```python
 verse_count = df['verse_text'].str.lower().value_counts().to_frame().reset_index().rename(
     columns={"verse_text":"count", "index":"verse_text"})
-```
 
-
-```python
 boundaries = [10, 25, 50, 100, 250, 500, 1000]
 
 sns.barplot(
@@ -288,7 +313,7 @@ sns.barplot(
 
 
     
-![png](./img/output_17_0.png)
+![png](output_18_0.png)
     
 
 
@@ -568,7 +593,7 @@ plt.tight_layout();
 
 
     
-![png](./img/output_25_0.png)
+![png](output_26_0.png)
     
 
 
@@ -663,7 +688,7 @@ sns.histplot(
 
 
     
-![png](./img/output_30_0.png)
+![png](output_31_0.png)
     
 
 
@@ -682,7 +707,7 @@ for ax_, c in zip(ax, ['verse_len', 'token_len']):
 
 
     
-![png](./img/output_32_0.png)
+![png](output_33_0.png)
     
 
 
@@ -840,7 +865,7 @@ df_.query("verse_len > 200").head()
 
 This is a small sample of the verses with 100% unique tokens, but a more broad look indicates they are legitimate, so we will leave them in.
 
-How do they bias the distribution of unique token percentage?
+On visual analysis, the change is qualitatively small. This is something else to keep in mind but fine to leave in for a first pass.
 
 
 ```python
@@ -877,7 +902,7 @@ for ax_, q, p, t in zip(
         ax=ax_,
         palette=p
     )
-    ax_.set_xticklabels(["All", "100% Unique Removed"])
+    ax_.set_xticklabels(["All", "Without 100% Unique Verses"])
     ax_.title.set_text(t)
 
 plt.suptitle("Distribution of Unique Token Percentage with and without 100% Unique Verses", size=16)
@@ -886,7 +911,7 @@ plt.tight_layout();
 
 
     
-![png](./img/output_36_0.png)
+![png](output_37_0.png)
     
 
 
@@ -925,7 +950,21 @@ df_unique_token_pct_floor = pd.concat([
 ])
 ```
 
-# Post-optimization EDA
+# Post-optimization
+### 9. Review<a name="9"></a>
+<a href="#index">Top</a>
+Here is what we learned from our exploratory data analysis:
+- Target class is imbalanced (~85% male to ~15% female)
+- Significant overrepresentation of some artists
+- Slight variation in verse type distribution across genders
+- Significant overrepresentation from 2010s
+- Significant missing 'release_date' data
+
+Here is what we did to optimize the data before modeling:
+- Removed any verse whose text occurs > 10x
+- Downsampled overrepresented male artists using 3x standard deviations above the mean as the cutoff (823 verses), and using unique token percentage to determine which verses to keep
+- Removed verses from male artists with < 15% unique token percentage
+
 We can now look at the effects of our cleaning process.
 
 
@@ -936,9 +975,8 @@ df['status'] = 'Raw'
 df_['status'] = 'Optimized'
 ```
 
-### 9. Imbalanced classes revisited<a name="9"></a>
+### 10. Imbalanced classes revisited<a name="10"></a>
 <a href="#index">Top</a>
-
 
 
 ```python
@@ -976,13 +1014,12 @@ plt.tight_layout();
 
 
     
-![png](./img/output_44_0.png)
+![png](output_45_0.png)
     
 
 
-### 10. Overrepresentation revisited<a name="10"></a>
+### 11. Overrepresentation revisited<a name="11"></a>
 <a href="#index">Top</a>
-
 
 
 ```python
@@ -1019,6 +1056,13 @@ plt.tight_layout();
 
 
     
-![png](./img/output_46_0.png)
+![png](output_47_0.png)
     
 
+
+### 12. Conclusion and future considerations<a name="12"></a>
+<a href="#index">Top</a>
+
+Our optimization reduced the gender imbalance slightly, from ~85% m/15% f to 80% m/20% f. Downsampling improved the overrepresentation issue, at least qualitatively.
+
+We opted to not take further steps in optimization at this time. If need be, we could do more comprehensive tokenization and calculation of unique token percentage, analysis and adjustment of release dates, analysis of verse types, and more aggressive downsampling.

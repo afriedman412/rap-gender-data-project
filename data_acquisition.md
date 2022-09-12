@@ -21,13 +21,12 @@ This notebook will walk through the process of getting the raw data from Genius.
 ### 1. Introduction <a name="1"></a>
 <a href="#index">Top</a>
 
-For demonstration, we will get all the songs by Vallejo, California rap veteran [Suga-T](https://suga-t.com/). Suga is Bay Area godfather E-40's brother, is probably best known outside the Bay for her verses on 40 hits like ["Sprinkle Me"](https://www.youtube.com/watch?v=byuQVTdlfos&ab_channel=E40VEVO) and ["Captain Save A Hoe"](https://www.youtube.com/watch?v=_7vQSPBtwyc&ab_channel=E40VEVO). But she is an accomplished artist in her own right, both solo and as a member of The Click (with 40, cousin B-Legit, and other brother D-Shot).
+For demonstration, we will get all the songs by Vallejo, California rap veteran [Suga-T](https://suga-t.com/). Suga is Bay Area godfather E-40's brother, is probably best known outside the Bay for her verses on 40 hits like ["Sprinkle Me"](https://www.youtube.com/watch?v=byuQVTdlfos&ab_channel=E40VEVO) and ["Captain Save A Hoe"](https://www.youtube.com/watch?v=_7vQSPBtwyc&ab_channel=E40VEVO). But she is an accomplished artist with a long career in her own right, both solo and as a member of The Click (with 40, cousin B-Legit, and other brother D-Shot).
 
 Here she is in 2019 with E-40.
 
 ![Suga-T and E-40](./img/suga_t.jpg)
-
-_Image courtesy of <a href="https://www.thehypemagazine.com/2019/09/legendary-hip-hop-artist-suga-t-agrees-with-jermaine-dupris-comments-about-female-rappers-releases-w-o-r-k-it-soundtrack/">The Hype Magazine</a>_
+<center><em>Image courtesy of <a href="https://www.thehypemagazine.com/2019/09/legendary-hip-hop-artist-suga-t-agrees-with-jermaine-dupris-comments-about-female-rappers-releases-w-o-r-k-it-soundtrack/">The Hype Magazine</a></em></center>
 
 ### 2. Search <a name="2"></a>
 <a href="#index">Top</a>
@@ -650,20 +649,7 @@ Cleaning and standardization steps to correct some recurring issues in the data 
 
 
 ```python
-all_verses = pd.read_csv('cleaning_project_data.csv')
-
-# all_verses = pd.DataFrame()
-# for t in os.listdir('./lyrics'):
-#     try:
-#         v_path = os.path.join('./lyrics', t, t + "_verses.csv")
-#         if os.path.exists(v_path):
-#             artist_df = pd.read_csv(os.path.join('./lyrics', t, t + "_verses.csv"))
-#             all_verses = pd.concat([all_verses, artist_df])
-#         else:
-#             print("no v path!")
-#     except Exception as e:
-#         print(e.args)
-# all_verses.to_csv("cleaning_project_data.csv", index=False)
+# all_verses = pd.read_csv('cleaning_project_data.csv')
 ```
 
 
