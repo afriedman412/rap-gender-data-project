@@ -59,7 +59,7 @@ plt.tight_layout();
 
 
     
-![png](output_3_0.png)
+![png](./img/output_3_0.png)
     
 
 
@@ -102,7 +102,7 @@ plt.tight_layout()
 
 
     
-![png](output_5_0.png)
+![png](./img/output_5_0.png)
     
 
 
@@ -139,7 +139,7 @@ plt.tight_layout()
 
 
     
-![png](output_7_0.png)
+![png](./img/output_7_0.png)
     
 
 
@@ -174,7 +174,7 @@ plt.tight_layout;
 
 
     
-![png](output_9_0.png)
+![png](./img/output_9_0.png)
     
 
 
@@ -246,7 +246,7 @@ plt.tight_layout()
 
 
     
-![png](output_12_0.png)
+![png](./img/output_12_0.png)
     
 
 
@@ -313,7 +313,7 @@ sns.barplot(
 
 
     
-![png](output_18_0.png)
+![png](./img/output_18_0.png)
     
 
 
@@ -593,7 +593,7 @@ plt.tight_layout();
 
 
     
-![png](output_26_0.png)
+![png](./img/output_26_0.png)
     
 
 
@@ -688,7 +688,7 @@ sns.histplot(
 
 
     
-![png](output_31_0.png)
+![png](./img/output_31_0.png)
     
 
 
@@ -707,7 +707,7 @@ for ax_, c in zip(ax, ['verse_len', 'token_len']):
 
 
     
-![png](output_33_0.png)
+![png](./img/output_33_0.png)
     
 
 
@@ -911,7 +911,7 @@ plt.tight_layout();
 
 
     
-![png](output_37_0.png)
+![png](./img/output_37_0.png)
     
 
 
@@ -1014,7 +1014,7 @@ plt.tight_layout();
 
 
     
-![png](output_45_0.png)
+![png](./img/output_45_0.png)
     
 
 
@@ -1056,7 +1056,7 @@ plt.tight_layout();
 
 
     
-![png](output_47_0.png)
+![png](./img/output_47_0.png)
     
 
 
